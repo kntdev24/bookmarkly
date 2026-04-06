@@ -194,34 +194,6 @@
       gap: 4px;
     }
 
-    /* ===== PASSWORD STRENGTH ===== */
-    .password-strength {
-      margin-top: var(--ab-semantic-spacing-2);
-    }
-
-    .strength-bar {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 4px;
-    }
-
-    .strength-segment {
-      flex: 1;
-      height: 4px;
-      border-radius: 2px;
-      background: var(--ab-semantic-color-background-rest-secondary);
-      transition: background 0.2s;
-    }
-
-    .strength-segment.weak   { background: #b21b00; }
-    .strength-segment.medium { background: #ff6347; }
-    .strength-segment.strong { background: #32cd32; }
-
-    .strength-label {
-      font-size: 12px;
-      color: var(--ab-semantic-color-text-secondary);
-    }
-
     /* ===== BUTTON ===== */
     .btn-primary {
       width: 100%;
@@ -344,7 +316,6 @@
             id="password"
             placeholder="8文字以上で入力"
             autocomplete="new-password"
-            oninput="checkStrength(this.value)"
           >
           <button
             type="button"
@@ -354,15 +325,6 @@
           >
             <span class="material-symbols-outlined" id="pw-toggle-icon" style="font-size:20px;">visibility</span>
           </button>
-        </div>
-        <!-- Password strength -->
-        <div class="password-strength" id="strength-area" style="display:none;">
-          <div class="strength-bar">
-            <div class="strength-segment" id="seg1"></div>
-            <div class="strength-segment" id="seg2"></div>
-            <div class="strength-segment" id="seg3"></div>
-          </div>
-          <span class="strength-label" id="strength-label"></span>
         </div>
       </div>
 
@@ -422,36 +384,6 @@
         input.type = 'password';
         icon.textContent = 'visibility';
       }
-    }
-
-    function checkStrength(value) {
-      const area = document.getElementById('strength-area');
-      const label = document.getElementById('strength-label');
-      const segs = [
-        document.getElementById('seg1'),
-        document.getElementById('seg2'),
-        document.getElementById('seg3'),
-      ];
-
-      if (!value) {
-        area.style.display = 'none';
-        return;
-      }
-      area.style.display = 'block';
-
-      let score = 0;
-      if (value.length >= 8) score++;
-      if (/[A-Z]/.test(value) || /[0-9]/.test(value)) score++;
-      if (/[^A-Za-z0-9]/.test(value) || value.length >= 12) score++;
-
-      const levels = ['weak', 'medium', 'strong'];
-      const labels = ['弱い', '普通', '強い'];
-
-      segs.forEach((seg, i) => {
-        seg.className = 'strength-segment';
-        if (i < score) seg.classList.add(levels[score - 1]);
-      });
-      label.textContent = `強度: ${labels[score - 1] || ''}`;
     }
 
     function checkConfirm() {
