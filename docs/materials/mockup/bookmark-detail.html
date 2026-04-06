@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="marine-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ブックマーク詳細 — bookmarkly</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <style>
+    :root {
+      --ab-semantic-color-brand-default: #0c6993;
+      --ab-semantic-color-brand-lightest: #ebf4fa;
+      --ab-semantic-color-brand-dark: #003f65;
+      --ab-semantic-color-background-base: #f6f7f8;
+      --ab-semantic-color-background-rest-primary: #ffffff;
+      --ab-semantic-color-background-rest-secondary: #eaeef0;
+      --ab-semantic-color-background-brand-secondary: #ebf4fa;
+      --ab-semantic-color-background-overlay: rgba(35,35,35,0.70);
+      --ab-semantic-color-background-negative-secondary: #fff4f2;
+      --ab-semantic-color-text-default: #4e5b61;
+      --ab-semantic-color-text-secondary: #899295;
+      --ab-semantic-color-text-brand: #0c6993;
+      --ab-semantic-color-text-contrast: #ffffff;
+      --ab-semantic-color-text-negative: #b21b00;
+      --ab-semantic-color-border-brand: #0c6993;
+      --ab-semantic-color-border-bold: #899295;
+      --ab-semantic-color-border-light: #e1e7ea;
+      --ab-semantic-color-border-negative: #b21b00;
+      --ab-semantic-spacing-1: 4px;
+      --ab-semantic-spacing-2: 8px;
+      --ab-semantic-spacing-4: 16px;
+      --ab-semantic-spacing-6: 24px;
+      --ab-semantic-spacing-8: 32px;
+      --ab-semantic-border-radius-xs: 4px;
+      --ab-semantic-border-radius-sm: 8px;
+      --ab-semantic-border-radius-md: 16px;
+      --ab-semantic-border-radius-full: 9999px;
+      --ab-semantic-border-width-1: 1px;
+      --ab-semantic-border-width-2: 2px;
+      --sidebar-width: 240px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Avenir', 'Noto Sans JP', sans-serif;
+      background: var(--ab-semantic-color-background-base);
+      color: var(--ab-semantic-color-text-default);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ===== LAYOUT ===== */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--ab-semantic-color-background-rest-primary);
+      border-right: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      z-index: 100;
+      transition: transform 0.25s ease;
+    }
+
+    .sidebar-logo {
+      padding: var(--ab-semantic-spacing-6) var(--ab-semantic-spacing-4);
+      border-bottom: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-2);
+    }
+
+    .sidebar-logo-icon {
+      width: 32px; height: 32px;
+      background: var(--ab-semantic-color-brand-default);
+      border-radius: var(--ab-semantic-border-radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ab-semantic-color-text-contrast);
+    }
+
+    .sidebar-logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ab-semantic-color-text-brand);
+      letter-spacing: 0.02em;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: var(--ab-semantic-spacing-4) var(--ab-semantic-spacing-2);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-2);
+      padding: 10px var(--ab-semantic-spacing-2);
+      border-radius: var(--ab-semantic-border-radius-sm);
+      color: var(--ab-semantic-color-text-default);
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .nav-item:hover { background: var(--ab-semantic-color-background-rest-secondary); }
+    .nav-item.active {
+      background: var(--ab-semantic-color-background-brand-secondary);
+      color: var(--ab-semantic-color-text-brand);
+      font-weight: 700;
+    }
+    .nav-item .material-symbols-outlined { font-size: 20px; }
+
+    .sidebar-footer {
+      padding: var(--ab-semantic-spacing-4);
+      border-top: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+    }
+
+    .btn-add-sidebar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--ab-semantic-spacing-2);
+      width: 100%;
+      height: 42px;
+      background: var(--ab-semantic-color-brand-default);
+      color: var(--ab-semantic-color-text-contrast);
+      border: var(--ab-semantic-border-width-2) solid var(--ab-semantic-color-brand-default);
+      border-radius: var(--ab-semantic-border-radius-full);
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-add-sidebar:hover {
+      background: var(--ab-semantic-color-brand-dark);
+      border-color: var(--ab-semantic-color-brand-dark);
+    }
+
+    /* ===== DRAWER ===== */
+    .drawer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--ab-semantic-color-background-overlay);
+      z-index: 99;
+    }
+    .drawer-overlay.open { display: block; }
+
+    /* ===== MAIN ===== */
+    .main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-2);
+      padding: 0 var(--ab-semantic-spacing-6);
+      height: 56px;
+      background: var(--ab-semantic-color-background-rest-primary);
+      border-bottom: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-back {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--ab-semantic-color-text-brand);
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 6px var(--ab-semantic-spacing-2) 6px 4px;
+      border-radius: var(--ab-semantic-border-radius-sm);
+      transition: background 0.15s;
+    }
+
+    .topbar-back:hover { background: var(--ab-semantic-color-background-rest-secondary); }
+    .topbar-back .material-symbols-outlined { font-size: 18px; }
+
+    .topbar-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-2);
+    }
+
+    .icon-btn {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent;
+      cursor: pointer;
+      border-radius: var(--ab-semantic-border-radius-sm);
+      color: var(--ab-semantic-color-text-default);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .icon-btn:hover { background: var(--ab-semantic-color-background-rest-secondary); }
+    .icon-btn.danger { color: var(--ab-semantic-color-text-negative); }
+    .icon-btn.danger:hover { background: var(--ab-semantic-color-background-negative-secondary); }
+    .icon-btn .material-symbols-outlined { font-size: 20px; }
+
+    /* ===== PAGE CONTENT ===== */
+    .page-content {
+      padding: var(--ab-semantic-spacing-8) var(--ab-semantic-spacing-6);
+      max-width: 860px;
+      width: 100%;
+    }
+
+    /* ===== DETAIL CARD ===== */
+    .detail-card {
+      background: var(--ab-semantic-color-background-rest-primary);
+      border: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      border-radius: var(--ab-semantic-border-radius-md);
+      overflow: hidden;
+    }
+
+    /* OGP サムネイル */
+    .detail-thumbnail {
+      width: 100%;
+      height: 200px;
+      background: var(--ab-semantic-color-background-rest-secondary);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .detail-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .detail-thumbnail .material-symbols-outlined {
+      font-size: 48px;
+      color: var(--ab-semantic-color-text-secondary);
+    }
+
+    /* 詳細本文 */
+    .detail-body {
+      padding: var(--ab-semantic-spacing-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--ab-semantic-spacing-6);
+    }
+
+    /* フィールド */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--ab-semantic-spacing-1);
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ab-semantic-color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* タイトル */
+    .field-title {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--ab-semantic-color-text-default);
+    }
+
+    /* URL */
+    .field-url {
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-2);
+    }
+
+    .field-url a {
+      font-size: 13px;
+      color: var(--ab-semantic-color-text-brand);
+      text-decoration: none;
+      word-break: break-all;
+      flex: 1;
+    }
+
+    .field-url a:hover { text-decoration: underline; }
+
+    .field-url .material-symbols-outlined {
+      font-size: 16px;
+      color: var(--ab-semantic-color-text-secondary);
+      flex-shrink: 0;
+    }
+
+    /* メモ */
+    .field-memo {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--ab-semantic-color-text-default);
+      white-space: pre-wrap;
+    }
+
+    .field-memo.empty {
+      color: var(--ab-semantic-color-text-secondary);
+      font-style: italic;
+    }
+
+    /* タグ */
+    .field-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--ab-semantic-spacing-1);
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 12px;
+      border: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      border-radius: var(--ab-semantic-border-radius-full);
+      font-size: 12px;
+      color: var(--ab-semantic-color-text-secondary);
+      background: var(--ab-semantic-color-background-rest-primary);
+    }
+
+    .field-meta {
+      font-size: 13px;
+      color: var(--ab-semantic-color-text-secondary);
+    }
+
+    /* ステータス行 */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-4);
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: var(--ab-semantic-border-radius-full);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .status-badge.unread {
+      background: var(--ab-semantic-color-background-brand-secondary);
+      color: var(--ab-semantic-color-text-brand);
+    }
+
+    .status-badge.read {
+      background: var(--ab-semantic-color-background-rest-secondary);
+      color: var(--ab-semantic-color-text-secondary);
+    }
+
+    .status-badge .material-symbols-outlined { font-size: 16px; }
+
+    /* ===== ボタン ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--ab-semantic-spacing-1);
+      height: 42px;
+      padding: 0 var(--ab-semantic-spacing-6);
+      border-radius: var(--ab-semantic-border-radius-full);
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn .material-symbols-outlined { font-size: 18px; }
+
+    .btn-outlined {
+      background: var(--ab-semantic-color-background-rest-primary);
+      color: var(--ab-semantic-color-text-default);
+      border: var(--ab-semantic-border-width-2) solid var(--ab-semantic-color-border-light);
+    }
+
+    .btn-outlined:hover { border-color: var(--ab-semantic-color-border-bold); }
+
+    .btn-filled {
+      background: var(--ab-semantic-color-brand-default);
+      color: var(--ab-semantic-color-text-contrast);
+      border: var(--ab-semantic-border-width-2) solid var(--ab-semantic-color-brand-default);
+    }
+
+    .btn-filled:hover {
+      background: var(--ab-semantic-color-brand-dark);
+      border-color: var(--ab-semantic-color-brand-dark);
+    }
+
+    .btn-mark-read {
+      background: var(--ab-semantic-color-background-rest-primary);
+      color: var(--ab-semantic-color-text-brand);
+      border: var(--ab-semantic-border-width-2) solid var(--ab-semantic-color-brand-default);
+    }
+
+    .btn-mark-read:hover {
+      background: var(--ab-semantic-color-background-brand-secondary);
+    }
+
+    /* ===== 編集モード ===== */
+    .edit-field {
+      display: none;
+      flex-direction: column;
+      gap: var(--ab-semantic-spacing-1);
+    }
+
+    .edit-field.visible { display: flex; }
+
+    .view-field.hidden { display: none; }
+
+    .edit-input {
+      width: 100%;
+      padding: 10px var(--ab-semantic-spacing-4);
+      border: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      border-radius: var(--ab-semantic-border-radius-sm);
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--ab-semantic-color-text-default);
+      background: var(--ab-semantic-color-background-rest-primary);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .edit-input:focus { border-color: var(--ab-semantic-color-border-brand); }
+
+    .edit-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 10px var(--ab-semantic-spacing-4);
+      border: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      border-radius: var(--ab-semantic-border-radius-sm);
+      font-size: 15px;
+      font-family: inherit;
+      line-height: 1.7;
+      color: var(--ab-semantic-color-text-default);
+      background: var(--ab-semantic-color-background-rest-primary);
+      outline: none;
+      resize: vertical;
+      transition: border-color 0.15s;
+    }
+
+    .edit-textarea:focus { border-color: var(--ab-semantic-color-border-brand); }
+
+    /* タグ編集エリア */
+    .edit-tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-1);
+      padding: 10px var(--ab-semantic-spacing-4);
+      border: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      border-radius: var(--ab-semantic-border-radius-sm);
+      background: var(--ab-semantic-color-background-rest-primary);
+      cursor: text;
+      transition: border-color 0.15s;
+    }
+
+    .edit-tags-wrap:focus-within { border-color: var(--ab-semantic-color-border-brand); }
+
+    .edit-tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px 3px 12px;
+      background: var(--ab-semantic-color-background-brand-secondary);
+      border: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-brand-lightest);
+      border-radius: var(--ab-semantic-border-radius-full);
+      font-size: 12px;
+      color: var(--ab-semantic-color-text-brand);
+      font-weight: 700;
+    }
+
+    .edit-tag-remove {
+      display: flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px;
+      border: none; background: transparent;
+      cursor: pointer;
+      color: var(--ab-semantic-color-text-brand);
+      padding: 0;
+      border-radius: 50%;
+      opacity: 0.7;
+      transition: opacity 0.15s;
+    }
+
+    .edit-tag-remove:hover { opacity: 1; }
+    .edit-tag-remove .material-symbols-outlined { font-size: 14px; }
+
+    .edit-tag-input {
+      border: none; outline: none;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--ab-semantic-color-text-default);
+      background: transparent;
+      min-width: 80px;
+    }
+
+    .edit-hint {
+      font-size: 11px;
+      color: var(--ab-semantic-color-text-secondary);
+    }
+
+    /* 編集時アクション */
+    .edit-actions {
+      display: none;
+      justify-content: flex-end;
+      gap: var(--ab-semantic-spacing-2);
+      padding: var(--ab-semantic-spacing-4) var(--ab-semantic-spacing-6);
+      border-top: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+    }
+
+    .edit-actions.visible { display: flex; }
+
+    /* ===== 削除確認モーダル ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--ab-semantic-color-background-overlay);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: var(--ab-semantic-spacing-4);
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--ab-semantic-color-background-rest-primary);
+      border-radius: var(--ab-semantic-border-radius-lg);
+      padding: var(--ab-semantic-spacing-6);
+      max-width: 400px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: var(--ab-semantic-spacing-4);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .modal-desc {
+      font-size: 14px;
+      color: var(--ab-semantic-color-text-secondary);
+      line-height: 1.6;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--ab-semantic-spacing-2);
+    }
+
+    .btn-negative {
+      background: var(--ab-semantic-color-background-rest-primary);
+      color: var(--ab-semantic-color-text-negative);
+      border: var(--ab-semantic-border-width-2) solid var(--ab-semantic-color-border-negative);
+    }
+
+    .btn-negative:hover { background: var(--ab-semantic-color-background-negative-secondary); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+
+      .topbar { padding: 0 var(--ab-semantic-spacing-4); }
+
+      .page-content {
+        padding: var(--ab-semantic-spacing-4);
+        padding-bottom: 80px;
+      }
+
+      .detail-thumbnail { height: 160px; }
+
+      .detail-body { padding: var(--ab-semantic-spacing-4); }
+
+      .field-title { font-size: 17px; }
+
+      .edit-actions {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        margin: 0;
+        padding: var(--ab-semantic-spacing-2) var(--ab-semantic-spacing-4);
+        background: var(--ab-semantic-color-background-rest-primary);
+        border-top: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      }
+
+      .edit-actions .btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 削除確認モーダル -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-title">ブックマークを削除しますか？</div>
+    <div class="modal-desc">この操作は取り消せません。ブックマークとメモが完全に削除されます。</div>
+    <div class="modal-actions">
+      <button class="btn btn-outlined" onclick="closeDeleteModal()">キャンセル</button>
+      <button class="btn btn-negative">削除する</button>
+    </div>
+  </div>
+</div>
+
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeSidebar()"></div>
+
+<div class="app-layout">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <span class="material-symbols-outlined" style="font-size:18px;">bookmark</span>
+      </div>
+      <span class="sidebar-logo-text">bookmarkly</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="dashboard.html">
+        <span class="material-symbols-outlined">dashboard</span>
+        ダッシュボード
+      </a>
+      <a class="nav-item active" href="bookmark-list.html">
+        <span class="material-symbols-outlined">bookmarks</span>
+        ブックマーク
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-add-sidebar" onclick="location.href='bookmark-entry.html'">
+        <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+        ブックマークを追加
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <!-- トップバー -->
+    <header class="topbar">
+      <a class="topbar-back" href="bookmark-list.html">
+        <span class="material-symbols-outlined">arrow_back</span>
+        ブックマーク
+      </a>
+      <div class="topbar-actions" id="viewActions">
+        <button class="btn btn-outlined" id="editBtn" onclick="enterEditMode()">
+          <span class="material-symbols-outlined">edit</span>
+          編集
+        </button>
+        <button class="icon-btn danger" title="削除" onclick="openDeleteModal()">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="detail-card">
+
+        <!-- OGP サムネイル -->
+        <div class="detail-thumbnail">
+          <img src="https://placehold.co/680x200/ebf4fa/0c6993?text=OGP+Image" alt="OGP">
+        </div>
+
+        <div class="detail-body">
+
+          <!-- タイトル -->
+          <div class="field">
+            <div class="field-label">タイトル</div>
+            <div class="view-field field-title" id="viewTitle">
+              Vue 3 Composition API 完全ガイド — 実践パターンと設計原則
+            </div>
+            <div class="edit-field" id="editTitle">
+              <input class="edit-input" type="text" value="Vue 3 Composition API 完全ガイド — 実践パターンと設計原則">
+            </div>
+          </div>
+
+          <!-- URL -->
+          <div class="field">
+            <div class="field-label">URL</div>
+            <div class="view-field field-url" id="viewUrl">
+              <a href="#" target="_blank">https://zenn.dev/ktnw/articles/vue3-composition-api-guide</a>
+              <span class="material-symbols-outlined">open_in_new</span>
+            </div>
+            <div class="edit-field" id="editUrl">
+              <input class="edit-input" type="url" value="https://zenn.dev/ktnw/articles/vue3-composition-api-guide">
+            </div>
+          </div>
+
+          <!-- メモ -->
+          <div class="field">
+            <div class="field-label">メモ</div>
+            <div class="view-field field-memo" id="viewMemo">Composition APIのベストプラクティスを網羅。useXxx系のカスタムフック設計に参考になりそう。provideとinjectの使い所も整理されていて良い。</div>
+            <div class="edit-field" id="editMemo">
+              <textarea class="edit-textarea">Composition APIのベストプラクティスを網羅。useXxx系のカスタムフック設計に参考になりそう。provideとinjectの使い所も整理されていて良い。</textarea>
+            </div>
+          </div>
+
+          <!-- タグ -->
+          <div class="field">
+            <div class="field-label">タグ</div>
+            <div class="view-field field-tags" id="viewTags">
+              <span class="tag-pill">Vue.js</span>
+              <span class="tag-pill">TypeScript</span>
+              <span class="tag-pill">設計</span>
+            </div>
+            <div class="edit-field" id="editTags">
+              <div class="edit-tags-wrap" id="editTagsWrap">
+                <span class="edit-tag-pill">Vue.js <button class="edit-tag-remove" onclick="removeEditTag(this)"><span class="material-symbols-outlined">close</span></button></span>
+                <span class="edit-tag-pill">TypeScript <button class="edit-tag-remove" onclick="removeEditTag(this)"><span class="material-symbols-outlined">close</span></button></span>
+                <span class="edit-tag-pill">設計 <button class="edit-tag-remove" onclick="removeEditTag(this)"><span class="material-symbols-outlined">close</span></button></span>
+                <input class="edit-tag-input" type="text" placeholder="#タグを追加" id="tagInput">
+              </div>
+              <span class="edit-hint">Enterキーまたはスペースでタグを確定</span>
+            </div>
+          </div>
+
+          <!-- 登録日 -->
+          <div class="field">
+            <div class="field-label">登録日</div>
+            <div class="field-meta">2026年3月27日</div>
+          </div>
+
+          <!-- ステータス -->
+          <div class="field">
+            <div class="field-label">ステータス</div>
+            <div class="status-row">
+              <span class="status-badge unread" id="statusBadge">
+                <span class="material-symbols-outlined">radio_button_checked</span>
+                未読
+              </span>
+              <button class="btn btn-mark-read" id="markReadBtn" onclick="markAsRead()">
+                <span class="material-symbols-outlined">check_circle</span>
+                既読にする
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 編集モード: 保存・キャンセル -->
+        <div class="edit-actions" id="editActions">
+          <button class="btn btn-outlined" onclick="exitEditMode()">キャンセル</button>
+          <button class="btn btn-filled" onclick="exitEditMode()">保存する</button>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('drawerOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('drawerOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // 編集モードに入る
+  function enterEditMode() {
+    ['viewTitle', 'viewUrl', 'viewMemo', 'viewTags'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
+    });
+    ['editTitle', 'editUrl', 'editMemo', 'editTags'].forEach(id => {
+      document.getElementById(id).classList.add('visible');
+    });
+    document.getElementById('editActions').classList.add('visible');
+    document.getElementById('viewActions').style.display = 'none';
+  }
+
+  // 編集モードを終了
+  function exitEditMode() {
+    ['viewTitle', 'viewUrl', 'viewMemo', 'viewTags'].forEach(id => {
+      document.getElementById(id).classList.remove('hidden');
+    });
+    ['editTitle', 'editUrl', 'editMemo', 'editTags'].forEach(id => {
+      document.getElementById(id).classList.remove('visible');
+    });
+    document.getElementById('editActions').classList.remove('visible');
+    document.getElementById('viewActions').style.display = '';
+  }
+
+  // 既読にする
+  function markAsRead() {
+    const badge = document.getElementById('statusBadge');
+    badge.className = 'status-badge read';
+    badge.innerHTML = '<span class="material-symbols-outlined">check_circle</span> 既読';
+    document.getElementById('markReadBtn').style.display = 'none';
+  }
+
+  // タグ削除（編集モード）
+  function removeEditTag(btn) {
+    btn.closest('.edit-tag-pill').remove();
+  }
+
+  // タグ追加（Enterまたはスペース）
+  const tagInput = document.getElementById('tagInput');
+  tagInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const val = tagInput.value.replace(/^#/, '').trim();
+      if (!val) return;
+      const wrap = document.getElementById('editTagsWrap');
+      const pill = document.createElement('span');
+      pill.className = 'edit-tag-pill';
+      pill.innerHTML = `${val} <button class="edit-tag-remove" onclick="removeEditTag(this)"><span class="material-symbols-outlined">close</span></button>`;
+      wrap.insertBefore(pill, tagInput);
+      tagInput.value = '';
+    }
+  });
+
+  // 削除モーダル
+  function openDeleteModal() {
+    document.getElementById('deleteModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+</script>
+</body>
+</html>

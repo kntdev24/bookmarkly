@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="marine-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ブックマーク一覧 — bookmarkly</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <style>
+    :root {
+      --ab-semantic-color-brand-default: #0c6993;
+      --ab-semantic-color-brand-dark: #003f65;
+      --ab-semantic-color-background-base: #f6f7f8;
+      --ab-semantic-color-background-rest-primary: #ffffff;
+      --ab-semantic-color-background-rest-secondary: #eaeef0;
+      --ab-semantic-color-background-brand-primary: #0c6993;
+      --ab-semantic-color-background-brand-secondary: #ebf4fa;
+      --ab-semantic-color-background-overlay: rgba(35,35,35,0.70);
+      --ab-semantic-color-text-default: #4e5b61;
+      --ab-semantic-color-text-secondary: #899295;
+      --ab-semantic-color-text-brand: #0c6993;
+      --ab-semantic-color-text-contrast: #ffffff;
+      --ab-semantic-color-text-negative: #b21b00;
+      --ab-semantic-color-border-brand: #0c6993;
+      --ab-semantic-color-border-bold: #899295;
+      --ab-semantic-color-border-light: #e1e7ea;
+      --ab-semantic-color-border-negative: #b21b00;
+      --ab-semantic-spacing-1: 4px;
+      --ab-semantic-spacing-2: 8px;
+      --ab-semantic-spacing-4: 16px;
+      --ab-semantic-spacing-6: 24px;
+      --ab-semantic-spacing-8: 32px;
+      --ab-semantic-border-radius-xs: 4px;
+      --ab-semantic-border-radius-sm: 8px;
+      --ab-semantic-border-radius-md: 16px;
+      --ab-semantic-border-radius-full: 9999px;
+      --ab-semantic-border-width-1: 1px;
+      --ab-semantic-border-width-2: 2px;
+      --sidebar-width: 240px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Avenir', 'Noto Sans JP', sans-serif;
+      background: var(--ab-semantic-color-background-base);
+      color: var(--ab-semantic-color-text-default);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ===== LAYOUT ===== */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--ab-semantic-color-background-rest-primary);
+      border-right: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 100;
+      transition: transform 0.25s ease;
+    }
+
+    .sidebar-logo {
+      padding: var(--ab-semantic-spacing-6) var(--ab-semantic-spacing-4);
+      border-bottom: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-2);
+    }
+
+    .sidebar-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--ab-semantic-color-brand-default);
+      border-radius: var(--ab-semantic-border-radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ab-semantic-color-text-contrast);
+      font-size: 16px;
+    }
+
+    .sidebar-logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ab-semantic-color-text-brand);
+      letter-spacing: 0.02em;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: var(--ab-semantic-spacing-4) var(--ab-semantic-spacing-2);
+      overflow-y: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-2);
+      padding: 10px var(--ab-semantic-spacing-2);
+      border-radius: var(--ab-semantic-border-radius-sm);
+      color: var(--ab-semantic-color-text-default);
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .nav-item:hover {
+      background: var(--ab-semantic-color-background-rest-secondary);
+    }
+
+    .nav-item.active {
+      background: var(--ab-semantic-color-background-brand-secondary);
+      color: var(--ab-semantic-color-text-brand);
+      font-weight: 700;
+    }
+
+    .nav-item .material-symbols-outlined {
+      font-size: 20px;
+    }
+
+    .sidebar-footer {
+      padding: var(--ab-semantic-spacing-4);
+      border-top: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+    }
+
+    /* + 追加ボタン（PC: サイドバー下部） */
+    .btn-add-sidebar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--ab-semantic-spacing-2);
+      width: 100%;
+      height: 42px;
+      background: var(--ab-semantic-color-brand-default);
+      color: var(--ab-semantic-color-text-contrast);
+      border: var(--ab-semantic-border-width-2) solid var(--ab-semantic-color-brand-default);
+      border-radius: var(--ab-semantic-border-radius-full);
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn-add-sidebar:hover {
+      background: var(--ab-semantic-color-brand-dark);
+      border-color: var(--ab-semantic-color-brand-dark);
+    }
+
+    /* ===== DRAWER OVERLAY ===== */
+    .drawer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--ab-semantic-color-background-overlay);
+      z-index: 99;
+    }
+
+    .drawer-overlay.open {
+      display: block;
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ===== TOPBAR (mobile) ===== */
+    .topbar {
+      display: none;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-2);
+      padding: 0 var(--ab-semantic-spacing-4);
+      height: 56px;
+      background: var(--ab-semantic-color-background-rest-primary);
+      border-bottom: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ab-semantic-color-text-brand);
+      flex: 1;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: var(--ab-semantic-border-radius-sm);
+      color: var(--ab-semantic-color-text-default);
+      transition: background 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--ab-semantic-color-background-rest-secondary);
+    }
+
+    /* ===== PAGE CONTENT ===== */
+    .page-content {
+      padding: var(--ab-semantic-spacing-8) var(--ab-semantic-spacing-6);
+      max-width: 860px;
+      width: 100%;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ab-semantic-color-text-default);
+      margin-bottom: var(--ab-semantic-spacing-6);
+    }
+
+    /* ===== SEARCH & FILTERS ===== */
+    .toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: var(--ab-semantic-spacing-2);
+      margin-bottom: var(--ab-semantic-spacing-6);
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+
+    .search-wrap .material-symbols-outlined {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      color: var(--ab-semantic-color-text-secondary);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 var(--ab-semantic-spacing-4) 0 40px;
+      border: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      border-radius: var(--ab-semantic-border-radius-sm);
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--ab-semantic-color-text-default);
+      background: var(--ab-semantic-color-background-rest-primary);
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    .search-input::placeholder {
+      color: var(--ab-semantic-color-text-secondary);
+    }
+
+    .search-input:focus {
+      border-color: var(--ab-semantic-color-border-brand);
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-2);
+      flex-wrap: wrap;
+    }
+
+    /* Status tabs */
+    .status-tabs {
+      display: flex;
+      gap: var(--ab-semantic-spacing-1);
+      background: var(--ab-semantic-color-background-rest-secondary);
+      padding: 3px;
+      border-radius: var(--ab-semantic-border-radius-full);
+    }
+
+    .status-tab {
+      height: 30px;
+      padding: 0 var(--ab-semantic-spacing-4);
+      border-radius: var(--ab-semantic-border-radius-full);
+      border: none;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      color: var(--ab-semantic-color-text-secondary);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+
+    .status-tab.active {
+      background: var(--ab-semantic-color-background-rest-primary);
+      color: var(--ab-semantic-color-text-brand);
+    }
+
+    /* Tag filter dropdown */
+    .filter-select {
+      height: 36px;
+      padding: 0 var(--ab-semantic-spacing-4);
+      border: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      border-radius: var(--ab-semantic-border-radius-full);
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--ab-semantic-color-text-default);
+      background: var(--ab-semantic-color-background-rest-primary);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .filter-select:focus {
+      border-color: var(--ab-semantic-color-border-brand);
+    }
+
+    .result-count {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--ab-semantic-color-text-secondary);
+      white-space: nowrap;
+    }
+
+    /* ===== BOOKMARK LIST ===== */
+    .bookmark-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--ab-semantic-spacing-2);
+    }
+
+    /* ===== BOOKMARK CARD ===== */
+    .bookmark-card {
+      background: var(--ab-semantic-color-background-rest-primary);
+      border: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      border-radius: var(--ab-semantic-border-radius-md);
+      overflow: hidden;
+      display: flex;
+      transition: border-color 0.15s;
+    }
+
+    .bookmark-card:hover {
+      border-color: var(--ab-semantic-color-border-bold);
+    }
+
+    /* 未読：薄いマリンブルー背景 */
+    .bookmark-card.unread {
+      background: var(--ab-semantic-color-background-brand-secondary);
+    }
+
+    .card-body {
+      flex: 1;
+      padding: var(--ab-semantic-spacing-4);
+      display: flex;
+      gap: var(--ab-semantic-spacing-4);
+      min-width: 0;
+    }
+
+    /* サムネイル */
+    .card-thumbnail {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--ab-semantic-border-radius-sm);
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--ab-semantic-color-background-rest-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-thumbnail .material-symbols-outlined {
+      font-size: 28px;
+      color: var(--ab-semantic-color-text-secondary);
+    }
+
+    .card-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--ab-semantic-spacing-1);
+    }
+
+    .card-meta-top {
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-2);
+    }
+
+
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ab-semantic-color-text-default);
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-domain {
+      font-size: 12px;
+      color: var(--ab-semantic-color-text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-memo {
+      font-size: 12px;
+      color: var(--ab-semantic-color-text-secondary);
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      gap: var(--ab-semantic-spacing-1);
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    /* タグ pill */
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border: var(--ab-semantic-border-width-1) solid var(--ab-semantic-color-border-light);
+      border-radius: var(--ab-semantic-border-radius-full);
+      font-size: 11px;
+      color: var(--ab-semantic-color-text-secondary);
+      background: var(--ab-semantic-color-background-rest-primary);
+      white-space: nowrap;
+    }
+
+    .card-date {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--ab-semantic-color-text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* カード右のアクションエリア */
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--ab-semantic-spacing-2);
+      gap: var(--ab-semantic-spacing-1);
+      flex-shrink: 0;
+    }
+
+    .card-action-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: var(--ab-semantic-border-radius-full);
+      color: var(--ab-semantic-color-text-secondary);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .card-action-btn:hover {
+      background: var(--ab-semantic-color-background-rest-secondary);
+    }
+
+    .card-action-btn.mark-read {
+      color: var(--ab-semantic-color-brand-default);
+    }
+
+    .card-action-btn .material-symbols-outlined {
+      font-size: 20px;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px var(--ab-semantic-spacing-6);
+      text-align: center;
+      gap: var(--ab-semantic-spacing-4);
+    }
+
+    .empty-state .material-symbols-outlined {
+      font-size: 56px;
+      color: var(--ab-semantic-color-border-light);
+    }
+
+    .empty-state-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ab-semantic-color-text-default);
+    }
+
+    .empty-state-desc {
+      font-size: 14px;
+      color: var(--ab-semantic-color-text-secondary);
+    }
+
+    /* ===== FAB（スマホ） ===== */
+    .fab {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      background: var(--ab-semantic-color-brand-default);
+      color: var(--ab-semantic-color-text-contrast);
+      border: none;
+      border-radius: var(--ab-semantic-border-radius-full);
+      box-shadow: 0 4px 16px rgba(12, 105, 147, 0.35);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      z-index: 80;
+      transition: background 0.15s;
+    }
+
+    .fab:hover {
+      background: var(--ab-semantic-color-brand-dark);
+    }
+
+    .fab .material-symbols-outlined {
+      font-size: 28px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main {
+        margin-left: 0;
+      }
+
+      .topbar {
+        display: flex;
+      }
+
+      .page-content {
+        padding: var(--ab-semantic-spacing-4);
+      }
+
+      .page-title {
+        font-size: 20px;
+        margin-bottom: var(--ab-semantic-spacing-4);
+      }
+
+      .fab {
+        display: flex;
+      }
+
+      .result-count {
+        display: none;
+      }
+
+      /* ── モバイル コンパクトカード ── */
+      .bookmark-list {
+        gap: 4px;
+      }
+
+      .bookmark-card {
+        border-radius: var(--ab-semantic-border-radius-sm);
+      }
+
+      /* サムネイル・メモ・ドメイン・未読バッジを非表示 */
+      .card-thumbnail { display: none; }
+      .card-memo      { display: none; }
+      .card-domain    { display: none; }
+
+      .card-body {
+        padding: 10px 12px;
+      }
+
+      .card-info {
+        gap: 4px;
+      }
+
+      .card-meta-top {
+        gap: var(--ab-semantic-spacing-1);
+      }
+
+      .card-title {
+        font-size: 13px;
+      }
+
+      .card-footer {
+        margin-top: 0;
+      }
+
+      /* タグは最大2つまで表示 */
+      .tag-pill:nth-child(n+3) { display: none; }
+
+      .tag-pill {
+        font-size: 10px;
+        padding: 1px 7px;
+      }
+
+      .card-actions {
+        padding: 4px;
+        gap: 0;
+      }
+
+      .card-action-btn {
+        width: 28px;
+        height: 28px;
+      }
+
+      .card-action-btn .material-symbols-outlined {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ドロワーオーバーレイ -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeSidebar()"></div>
+
+<div class="app-layout">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <span class="material-symbols-outlined" style="font-size:18px;">bookmark</span>
+      </div>
+      <span class="sidebar-logo-text">bookmarkly</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="dashboard.html">
+        <span class="material-symbols-outlined">dashboard</span>
+        ダッシュボード
+      </a>
+      <a class="nav-item active" href="bookmark-list.html">
+        <span class="material-symbols-outlined">bookmarks</span>
+        ブックマーク
+        <span style="margin-left:auto;background:var(--ab-semantic-color-brand-default);color:var(--ab-semantic-color-text-contrast);font-size:11px;font-weight:700;padding:1px 8px;border-radius:var(--ab-semantic-border-radius-full);">12</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-add-sidebar" onclick="location.href='bookmark-entry.html'">
+        <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+        ブックマークを追加
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <!-- モバイル用トップバー -->
+    <header class="topbar">
+      <button class="icon-btn" onclick="openSidebar()">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <span class="topbar-logo-text">bookmarkly</span>
+      <button class="icon-btn">
+        <span class="material-symbols-outlined">search</span>
+      </button>
+    </header>
+
+    <div class="page-content">
+      <h1 class="page-title">ブックマーク</h1>
+
+      <!-- 検索・フィルタ -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="material-symbols-outlined">search</span>
+          <input class="search-input" type="text" placeholder="タイトル・メモ・タグで検索...">
+        </div>
+        <div class="filter-row">
+          <div class="status-tabs">
+            <button class="status-tab active">すべて</button>
+            <button class="status-tab">未読のみ</button>
+          </div>
+          <select class="filter-select">
+            <option value="">タグ：すべて</option>
+            <option>Vue.js</option>
+            <option>TypeScript</option>
+            <option>設計</option>
+            <option>読書</option>
+            <option>買い物</option>
+          </select>
+          <span class="result-count">12件</span>
+        </div>
+      </div>
+
+      <!-- ブックマーク一覧 -->
+      <div class="bookmark-list">
+
+        <!-- カード1: 未読・技術記事 -->
+        <div class="bookmark-card unread">
+          <div class="card-body">
+            <div class="card-thumbnail">
+              <img src="https://placehold.co/72x72/ebf4fa/0c6993?text=📄" alt="">
+            </div>
+            <div class="card-info">
+              <div class="card-title">Vue 3 Composition API 完全ガイド — 実践パターンと設計原則</div>
+              <div class="card-domain">zenn.dev</div>
+              <div class="card-memo">Composition APIのベストプラクティスを網羅。useXxx系のカスタムフック設計に参考になりそう</div>
+              <div class="card-footer">
+                <span class="tag-pill">Vue.js</span>
+                <span class="tag-pill">TypeScript</span>
+                <span class="tag-pill">設計</span>
+                <span class="card-date">2026年3月27日</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="card-action-btn mark-read" title="既読にする">
+              <span class="material-symbols-outlined">check_circle</span>
+            </button>
+            <button class="card-action-btn" title="詳細を見る" onclick="location.href='bookmark-detail.html'">
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- カード2: 未読・ニュース -->
+        <div class="bookmark-card unread">
+          <div class="card-body">
+            <div class="card-thumbnail">
+              <img src="https://placehold.co/72x72/fff7e6/b36000?text=📰" alt="">
+            </div>
+            <div class="card-info">
+              <div class="card-title">Claude 3.7 発表、ハイブリッド推論モデルが登場</div>
+              <div class="card-domain">techcrunch.com</div>
+              <div class="card-memo">Anthropicの新モデル。extended thinkingモードが面白い</div>
+              <div class="card-footer">
+                <span class="tag-pill">AI</span>
+                <span class="tag-pill">Claude</span>
+                <span class="card-date">2026年3月25日</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="card-action-btn mark-read" title="既読にする">
+              <span class="material-symbols-outlined">check_circle</span>
+            </button>
+            <button class="card-action-btn" title="詳細を見る" onclick="location.href='bookmark-detail.html'">
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- カード3: 既読・書籍 -->
+        <div class="bookmark-card read">
+          <div class="card-body">
+            <div class="card-thumbnail">
+              <img src="https://placehold.co/72x72/f0faf0/1a7a1a?text=📚" alt="">
+            </div>
+            <div class="card-info">
+              <div class="card-meta-top"></div>
+              <div class="card-title">良いコード／悪いコードで学ぶ設計入門</div>
+              <div class="card-domain">amazon.co.jp</div>
+              <div class="card-memo">リファクタリングの具体例が豊富で実践的。チームに薦めたい</div>
+              <div class="card-footer">
+                <span class="tag-pill">設計</span>
+                <span class="tag-pill">読書</span>
+                <span class="card-date">2026年3月20日</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="card-action-btn" title="詳細を見る" onclick="location.href='bookmark-detail.html'">
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- カード4: 未読・商品 -->
+        <div class="bookmark-card unread">
+          <div class="card-body">
+            <div class="card-thumbnail">
+              <img src="https://placehold.co/72x72/fff0f5/99004d?text=🛍" alt="">
+            </div>
+            <div class="card-info">
+              <div class="card-title">HHKB Professional HYBRID Type-S 英語配列 墨</div>
+              <div class="card-domain">amazon.co.jp</div>
+              <div class="card-memo">次のキーボード候補。セール時に買う</div>
+              <div class="card-footer">
+                <span class="tag-pill">買い物</span>
+                <span class="tag-pill">キーボード</span>
+                <span class="card-date">2026年3月18日</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="card-action-btn mark-read" title="既読にする">
+              <span class="material-symbols-outlined">check_circle</span>
+            </button>
+            <button class="card-action-btn" title="詳細を見る" onclick="location.href='bookmark-detail.html'">
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- カード5: 既読・テキストメモ (URLなし) -->
+        <div class="bookmark-card read">
+          <div class="card-body">
+            <div class="card-thumbnail" style="background:var(--ab-semantic-color-background-rest-secondary);">
+              <span class="material-symbols-outlined">notes</span>
+            </div>
+            <div class="card-info">
+              <div class="card-meta-top"></div>
+              <div class="card-title">DBスキーマ設計メモ — Turso + Honoの構成検討</div>
+              <div class="card-domain" style="color:var(--ab-semantic-color-text-secondary);">テキストメモ</div>
+              <div class="card-memo">bookmarksテーブルのuser_idはPhase1でNULL許容、Phase2でNOT NULL+FK制約を付与する方針</div>
+              <div class="card-footer">
+                <span class="tag-pill">設計</span>
+                <span class="tag-pill">Turso</span>
+                <span class="card-date">2026年3月15日</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="card-action-btn" title="詳細を見る" onclick="location.href='bookmark-detail.html'">
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- カード6: 既読・技術記事 -->
+        <div class="bookmark-card read">
+          <div class="card-body">
+            <div class="card-thumbnail">
+              <img src="https://placehold.co/72x72/ebf4fa/0c6993?text=📄" alt="">
+            </div>
+            <div class="card-info">
+              <div class="card-meta-top"></div>
+              <div class="card-title">Hono v4 リリースノート — エッジランタイム対応の強化</div>
+              <div class="card-domain">hono.dev</div>
+              <div class="card-memo"></div>
+              <div class="card-footer">
+                <span class="tag-pill">Hono</span>
+                <span class="tag-pill">バックエンド</span>
+                <span class="card-date">2026年3月10日</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="card-action-btn" title="詳細を見る" onclick="location.href='bookmark-detail.html'">
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <!-- /bookmark-list -->
+
+    </div>
+    <!-- /page-content -->
+
+  </main>
+</div>
+
+<!-- FAB（スマホ用） -->
+<button class="fab" title="ブックマークを追加" onclick="location.href='bookmark-entry.html'">
+  <span class="material-symbols-outlined">add</span>
+</button>
+
+<script>
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('drawerOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('drawerOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // ステータスタブ切替
+  document.querySelectorAll('.status-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // 既読にするボタン
+  document.querySelectorAll('.card-action-btn.mark-read').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const card = btn.closest('.bookmark-card');
+      card.classList.remove('unread');
+      card.classList.add('read');
+      btn.remove();
+    });
+  });
+</script>
+</body>
+</html>

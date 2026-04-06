@@ -1,6 +1,6 @@
 {
   "name": "WebApp Starterkit",
-  "runArgs": ["--name", "webapp-starterkit"],
+  "runArgs": ["--name", "bookmarkly"],
   "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
   "forwardPorts": [5173, 3000],
   "postCreateCommand": "npm install && curl -sSfL https://get.tur.so/install.sh | bash",
