@@ -1,5 +1,5 @@
 {
-  "name": "webapp-starterkit",
+  "name": "bookmarkly",
   "private": true,
   "workspaces": [
     "apps/frontend",
