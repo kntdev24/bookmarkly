@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { useSidebar } from '../composables/useSidebar.js';
+import { currentUser, clearAuth } from '../stores/auth.js';
 
 const router = useRouter();
 const { isOpen, close } = useSidebar();
@@ -8,6 +9,12 @@ const { isOpen, close } = useSidebar();
 function goToEntry() {
   close();
   router.push('/bookmarks/entry');
+}
+
+function logout() {
+  clearAuth();
+  close();
+  router.push('/login');
 }
 </script>
 
@@ -38,6 +45,13 @@ function goToEntry() {
         <span class="material-symbols-outlined" style="font-size:18px">add</span>
         ブックマークを追加
       </button>
+      <div v-if="currentUser" class="user-info">
+        <span class="material-symbols-outlined user-icon">account_circle</span>
+        <span class="user-email">{{ currentUser.email }}</span>
+        <button class="logout-btn" @click="logout" title="ログアウト">
+          <span class="material-symbols-outlined">logout</span>
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -46,3 +60,53 @@ function goToEntry() {
     <span class="material-symbols-outlined">add</span>
   </button>
 </template>
+
+<style scoped>
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  min-width: 0;
+}
+
+.user-icon {
+  font-size: 18px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.user-email {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.logout-btn:hover {
+  background: var(--bg-primary);
+  color: var(--text-default);
+}
+.logout-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+</style>

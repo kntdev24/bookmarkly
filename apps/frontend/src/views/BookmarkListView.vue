@@ -2,24 +2,41 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import BookmarkCard from '../components/BookmarkCard.vue';
 import { listBookmarks, updateBookmark } from '../api/bookmarks.js';
-import type { Bookmark } from '../../../../packages/shared/types.js';
+import type { Bookmark, ContentType } from '../../../../packages/shared/types.js';
 
 const bookmarks = ref<Bookmark[]>([]);
 const loading = ref(true);
 const error = ref('');
 const searchQuery = ref('');
 const statusFilter = ref('');
+const contentTypeFilter = ref('');
+const tagFilter = ref('');
+
+const CONTENT_TYPE_LABELS: Record<string, string> = {
+  article: '記事',
+  news: 'ニュース',
+  book: '本',
+  product: '商品',
+  memo: 'メモ',
+  other: 'その他',
+};
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
 
-async function load(q?: string, status?: string) {
+function currentParams() {
+  return {
+    q: searchQuery.value || undefined,
+    status: statusFilter.value || undefined,
+    content_type: contentTypeFilter.value || undefined,
+    tag: tagFilter.value || undefined,
+  };
+}
+
+async function load() {
   loading.value = true;
   error.value = '';
   try {
-    bookmarks.value = await listBookmarks({
-      q: q || undefined,
-      status: status || undefined,
-    });
+    bookmarks.value = await listBookmarks(currentParams());
   } catch (e) {
     error.value = e instanceof Error ? e.message : '読み込みに失敗しました';
   } finally {
@@ -27,14 +44,12 @@ async function load(q?: string, status?: string) {
   }
 }
 
-watch(searchQuery, (val) => {
+watch(searchQuery, () => {
   if (searchTimer) clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => load(val, statusFilter.value), 300);
+  searchTimer = setTimeout(load, 300);
 });
 
-watch(statusFilter, (val) => {
-  load(searchQuery.value, val);
-});
+watch([statusFilter, contentTypeFilter, tagFilter], load);
 
 async function markRead(id: string) {
   try {
@@ -44,16 +59,28 @@ async function markRead(id: string) {
   } catch { /* ignore */ }
 }
 
+function filterByTag(tag: string) {
+  tagFilter.value = tagFilter.value === tag ? '' : tag;
+}
+
 const totalCount = computed(() => bookmarks.value.length);
 
-onMounted(() => load());
+const allTags = computed(() => {
+  const set = new Set<string>();
+  for (const b of bookmarks.value) {
+    for (const t of b.tags) set.add(t);
+  }
+  return [...set].sort();
+});
+
+onMounted(load);
 </script>
 
 <template>
   <div class="page-content">
     <h1 class="page-title">ブックマーク</h1>
 
-    <!-- 検索・フィルタ -->
+    <!-- 検索 -->
     <div class="toolbar">
       <div class="search-wrap">
         <span class="material-symbols-outlined search-icon">search</span>
@@ -68,22 +95,23 @@ onMounted(() => load());
         </button>
       </div>
 
+      <!-- ステータスフィルタ -->
       <div class="filter-tabs">
+        <button class="filter-tab" :class="{ active: statusFilter === '' }" @click="statusFilter = ''">すべて</button>
+        <button class="filter-tab" :class="{ active: statusFilter === 'unread' }" @click="statusFilter = 'unread'">未読</button>
+        <button class="filter-tab" :class="{ active: statusFilter === 'read' }" @click="statusFilter = 'read'">既読</button>
+      </div>
+
+      <!-- コンテンツ種別フィルタ -->
+      <div class="filter-tabs">
+        <button class="filter-tab" :class="{ active: contentTypeFilter === '' }" @click="contentTypeFilter = ''">すべての種別</button>
         <button
+          v-for="(label, type) in CONTENT_TYPE_LABELS"
+          :key="type"
           class="filter-tab"
-          :class="{ active: statusFilter === '' }"
-          @click="statusFilter = ''"
-        >すべて</button>
-        <button
-          class="filter-tab"
-          :class="{ active: statusFilter === 'unread' }"
-          @click="statusFilter = 'unread'"
-        >未読</button>
-        <button
-          class="filter-tab"
-          :class="{ active: statusFilter === 'read' }"
-          @click="statusFilter = 'read'"
-        >既読</button>
+          :class="{ active: contentTypeFilter === type }"
+          @click="contentTypeFilter = contentTypeFilter === type ? '' : (type as ContentType)"
+        >{{ label }}</button>
       </div>
     </div>
 
@@ -95,6 +123,17 @@ onMounted(() => load());
     <div v-else-if="error" class="error-state">{{ error }}</div>
 
     <template v-else>
+      <!-- タグフィルタ -->
+      <div v-if="allTags.length > 0" class="tag-filters">
+        <button
+          v-for="tag in allTags"
+          :key="tag"
+          class="tag-chip"
+          :class="{ active: tagFilter === tag }"
+          @click="filterByTag(tag)"
+        >#{{ tag }}</button>
+      </div>
+
       <div class="list-meta">{{ totalCount }}件</div>
 
       <div v-if="bookmarks.length === 0" class="empty-state">
@@ -175,12 +214,13 @@ onMounted(() => load());
 
 .filter-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
 }
 
 .filter-tab {
   height: 32px;
-  padding: 0 16px;
+  padding: 0 14px;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-full);
   font-size: 13px;
@@ -188,11 +228,37 @@ onMounted(() => load());
   background: var(--bg-primary);
   color: var(--text-secondary);
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .filter-tab:hover { border-color: var(--border-bold); }
 .filter-tab.active {
   background: var(--brand);
   color: var(--text-contrast);
+  border-color: var(--brand);
+}
+
+.tag-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tag-chip {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.tag-chip:hover { border-color: var(--border-brand); color: var(--brand); }
+.tag-chip.active {
+  background: var(--brand-light, #fce4ec);
+  color: var(--brand);
   border-color: var(--brand);
 }
 
