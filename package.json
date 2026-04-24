@@ -2,6 +2,7 @@
   "name": "bookmarkly",
   "private": true,
   "workspaces": [
+    "packages/shared",
     "apps/frontend",
     "apps/backend"
   ],
