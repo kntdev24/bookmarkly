@@ -280,11 +280,165 @@ bookmarkly/
 
 ---
 
-## Phase 3 について
+## Phase 3（インフラ・デプロイ）
 
-**Phase 2 完了後に要件を改めて整理し、plan.md に追記する。**
+### 概要
 
-prd.md に記載の Phase 3 候補（アーカイブ機能・ランダム再表示）はまだ粗い段階であり、Phase 2 の実装を通じて要件が具体化してから計画を立てる。Phase 3 の実装に入る前に必ず本セクションを更新すること。
+| 項目 | 内容 |
+|------|------|
+| フロントエンド | Netlify（静的ホスティング） |
+| バックエンド | Netlify Functions（Hono） |
+| DB | Turso クラウド |
+
+---
+
+### Step 13: Turso クラウド DB セットアップ
+
+Turso アカウント内でデータベースを作成し、接続情報を取得する。
+
+```bash
+# DB作成
+turso db create bookmarkly
+
+# 接続URLとauth tokenを確認
+turso db show bookmarkly
+turso db tokens create bookmarkly
+```
+
+取得した値をローカルの `.env` に設定し、マイグレーションを実行：
+
+```bash
+TURSO_DATABASE_URL=libsql://...
+TURSO_AUTH_TOKEN=...
+npm run db:migrate -w backend
+```
+
+---
+
+### Step 14: バックエンドを Netlify Functions 対応に改修
+
+現在の `index.ts` は `@hono/node-server` の `serve()` で起動している。Netlify Functions では `handler` をエクスポートする形式が必要なため、アプリ定義とサーバー起動を分離する。
+
+**`apps/backend/src/app.ts`** を新規作成し、Hono app を定義してエクスポート：
+
+```ts
+// app の定義・routes のマウントのみ。serve() は含めない
+export { app }
+```
+
+**`apps/backend/src/index.ts`** をローカル開発専用に変更：
+
+```ts
+import { serve } from '@hono/node-server'
+import { app } from './app.js'
+
+serve({ fetch: app.fetch, port: 3000 }, () => {
+  console.log('Backend running on http://localhost:3000')
+})
+```
+
+**`netlify/functions/api.ts`** を新規作成（リポジトリルートに配置）：
+
+```ts
+import { handle } from 'hono/netlify'
+import { app } from '../../apps/backend/src/app.js'
+
+export const handler = handle(app)
+```
+
+`@libsql/client` はサーバーレス環境向けに HTTP モードで import する：
+
+```ts
+// apps/backend/src/db/client.ts
+import { createClient } from '@libsql/client/http'
+```
+
+---
+
+### Step 15: netlify.toml の作成
+
+リポジトリルートに `netlify.toml` を作成：
+
+```toml
+[build]
+  command = "npm run build -w frontend"
+  publish = "apps/frontend/dist"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+- `/api/*` のリクエストは Netlify Functions へリダイレクト（フロントエンドの Vite proxy 設定と対称）
+- `/*` → `/index.html` は Vue Router の SPA ルーティング用
+
+---
+
+### Step 16: 環境変数の整備
+
+**`.env.example`** を更新（バックエンド用）：
+
+```
+TURSO_DATABASE_URL=libsql://your-db.turso.io
+TURSO_AUTH_TOKEN=your-token
+JWT_SECRET=your-secret
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+**Netlify 管理画面**（Site settings → Environment variables）で上記4つを設定する。
+
+---
+
+### Step 17: Netlify デプロイ・動作確認
+
+1. Netlify サイトと GitHub リポジトリが連携済みであることを確認
+2. Netlify 管理画面で環境変数を設定（Step 16）
+3. `main` ブランチへ push → Netlify が自動でビルド・デプロイ
+4. デプロイ後、本番 Turso DB に対してマイグレーションを実行：
+
+```bash
+TURSO_DATABASE_URL=<本番URL> TURSO_AUTH_TOKEN=<本番token> npm run db:migrate -w backend
+```
+
+5. ブラウザで本番 URL を開き、以下を確認：
+   - ブックマーク登録・一覧表示
+   - ログイン・新規登録
+   - AIタグ付けの動作
+
+---
+
+### 追加パッケージ
+
+| パッケージ | 対象 | 用途 |
+|-----------|------|------|
+| （追加なし） | — | Hono の Netlify アダプターは `hono/netlify` として本体に同梱済み |
+
+---
+
+### ディレクトリ追加分
+
+```
+bookmarkly/
+├── netlify/
+│   └── functions/
+│       └── api.ts          # Hono を Netlify Functions として export
+├── netlify.toml            # ビルド・リダイレクト設定
+└── apps/
+    └── backend/
+        └── src/
+            ├── app.ts      # Hono app 定義（新規・serve なし）
+            └── index.ts    # ローカル開発用サーバー起動（既存を変更）
+```
 
 ---
 

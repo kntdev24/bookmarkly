@@ -1,28 +1,31 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { useRouter } from 'vue-router';
+import AppSidebar from './components/AppSidebar.vue';
+import { useSidebar } from './composables/useSidebar.js';
 
-const message = ref<string>("");
-const error = ref<string>("");
-const loading = ref<boolean>(true);
+const router = useRouter();
+const { open } = useSidebar();
 
-onMounted(async () => {
-  try {
-    const res = await fetch("/api/message");
-    if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-    const data = await res.json();
-    message.value = data.message;
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : "Unknown error";
-  } finally {
-    loading.value = false;
-  }
-});
+function goToEntry() {
+  router.push('/bookmarks/entry');
+}
 </script>
 
 <template>
-  <div>
-    <p v-if="loading">Loading...</p>
-    <p v-else-if="error">Error: {{ error }}</p>
-    <p v-else>{{ message }}</p>
+  <div class="app-layout">
+    <AppSidebar />
+    <main class="main">
+      <!-- Mobile topbar (inside main so sticky works correctly) -->
+      <header class="topbar">
+        <button class="icon-btn" @click="open">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+        <span class="topbar-logo-text">bookmarkly</span>
+        <button class="icon-btn" @click="goToEntry">
+          <span class="material-symbols-outlined">add</span>
+        </button>
+      </header>
+      <RouterView />
+    </main>
   </div>
 </template>
