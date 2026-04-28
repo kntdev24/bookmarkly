@@ -461,33 +461,46 @@ bookmarkly/
 | ログイン・登録画面 | サイドバーを非表示にする |
 | ブックマーク一覧 | タイトル下にURLを表示、タイトル/URLクリックで新規タブ |
 | ブックマーク詳細 | URLを表示する |
+| ブックマーク登録画面（モバイル） | トップバーの「＋」ボタンを非表示にする |
 
 ---
 
-### Step 18: ログイン・登録画面のサイドバー非表示
+### Step 18: ログイン・登録画面のサイドバー非表示 & 登録画面の「＋」ボタン非表示
 
-現在 `App.vue` は全ルートで `<AppSidebar />` を描画している。`/login` と `/register` ではサイドバーが不要なため、ルートメタを使って条件分岐する。
+**背景**
 
-**`apps/frontend/src/router/index.ts`** — `/login` と `/register` に `meta: { noLayout: true }` を追加：
+- `/login`・`/register` では左サイドバーが不要
+- `/bookmarks/entry`（登録画面）では、`App.vue` トップバーの「＋」ボタンが不要。モバイル時は画面下部に「追加する」ボタンが固定表示されており、トップバーの「＋」ボタンと重なる
+
+**`apps/frontend/src/router/index.ts`** — 各ルートにメタを追加：
 
 ```ts
-{ path: '/login',    component: LoginView,    meta: { noLayout: true } },
-{ path: '/register', component: RegisterView, meta: { noLayout: true } },
+{ path: '/login',            component: LoginView,       meta: { noLayout: true } },
+{ path: '/register',         component: RegisterView,    meta: { noLayout: true } },
+{ path: '/bookmarks/entry',  component: BookmarkEntryView, meta: { hideAddButton: true } },
 ```
 
-**`apps/frontend/src/App.vue`** — `useRoute` でメタを参照し、サイドバーとトップバーを条件付きレンダリング：
+**`apps/frontend/src/App.vue`** — `useRoute` でメタを参照し、サイドバー・トップバー・「＋」ボタンを条件付きレンダリング：
 
 ```vue
 <script setup lang="ts">
 const route = useRoute();
 const isNoLayout = computed(() => !!route.meta.noLayout);
+const hideAddButton = computed(() => !!route.meta.hideAddButton);
 </script>
 
 <template>
   <div :class="isNoLayout ? 'app-auth' : 'app-layout'">
     <AppSidebar v-if="!isNoLayout" />
     <main class="main">
-      <header v-if="!isNoLayout" class="topbar">...</header>
+      <header v-if="!isNoLayout" class="topbar">
+        <button class="icon-btn" @click="open">...</button>
+        <span class="topbar-logo-text">bookmarkly</span>
+        <button v-if="!hideAddButton" class="icon-btn" @click="goToEntry">
+          <span class="material-symbols-outlined">add</span>
+        </button>
+        <div v-else style="width: 40px" />  <!-- 右側スペース維持 -->
+      </header>
       <RouterView />
     </main>
   </div>
@@ -632,8 +645,8 @@ apps/
 │           └── summarize.ts          # 新規: 記事要約API (Phase 4)
 └── frontend/
     └── src/
-        ├── App.vue                   # noLayout メタ対応 (Phase 3.5)
-        ├── router/index.ts           # /login・/register に noLayout 追加 (Phase 3.5)
+        ├── App.vue                   # noLayout・hideAddButton メタ対応 (Phase 3.5)
+        ├── router/index.ts           # /login・/register に noLayout、/bookmarks/entry に hideAddButton 追加 (Phase 3.5)
         ├── api/
         │   └── bookmarks.ts          # summarizeBookmark 追加 (Phase 4)
         ├── components/

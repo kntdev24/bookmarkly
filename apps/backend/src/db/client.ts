@@ -1,9 +1,6 @@
-import { createClient } from '@libsql/client/http';
-
-const url = process.env.TURSO_DATABASE_URL;
-if (!url) throw new Error('TURSO_DATABASE_URL is not set');
+import { createClient } from '@libsql/client';
 
 export const db = createClient({
-  url,
+  url: process.env.TURSO_DATABASE_URL ?? 'file:local.db',
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
