@@ -449,3 +449,195 @@ bookmarkly/
 | AIタグ付けのタイミング | 登録APIレスポンス後に非同期実行（ユーザーを待たせない） |
 | Tursoスキーマ詳細 | `migrate.ts` で `CREATE TABLE IF NOT EXISTS` を管理。インデックスは `status`・`created_at` に付与 |
 | Phase 1の認証なし運用 | `user_id = NULL` で登録。Phase 1はユーザー識別なしで動作させる |
+
+---
+
+## Phase 3.5（レイアウト調整）
+
+### 概要
+
+| 対象 | 変更内容 |
+|------|---------|
+| ログイン・登録画面 | サイドバーを非表示にする |
+| ブックマーク一覧 | タイトル下にURLを表示、タイトル/URLクリックで新規タブ |
+| ブックマーク詳細 | URLを表示する |
+
+---
+
+### Step 18: ログイン・登録画面のサイドバー非表示
+
+現在 `App.vue` は全ルートで `<AppSidebar />` を描画している。`/login` と `/register` ではサイドバーが不要なため、ルートメタを使って条件分岐する。
+
+**`apps/frontend/src/router/index.ts`** — `/login` と `/register` に `meta: { noLayout: true }` を追加：
+
+```ts
+{ path: '/login',    component: LoginView,    meta: { noLayout: true } },
+{ path: '/register', component: RegisterView, meta: { noLayout: true } },
+```
+
+**`apps/frontend/src/App.vue`** — `useRoute` でメタを参照し、サイドバーとトップバーを条件付きレンダリング：
+
+```vue
+<script setup lang="ts">
+const route = useRoute();
+const isNoLayout = computed(() => !!route.meta.noLayout);
+</script>
+
+<template>
+  <div :class="isNoLayout ? 'app-auth' : 'app-layout'">
+    <AppSidebar v-if="!isNoLayout" />
+    <main class="main">
+      <header v-if="!isNoLayout" class="topbar">...</header>
+      <RouterView />
+    </main>
+  </div>
+</template>
+```
+
+---
+
+### Step 19: ブックマーク一覧のURL表示とリンク化
+
+**`apps/frontend/src/components/BookmarkCard.vue`** を修正：
+
+- タイトル下に `<p class="card-url">{{ bookmark.url }}</p>` を追加
+- タイトルと URL を `<a :href="bookmark.url" target="_blank" rel="noopener noreferrer">` でラップ
+- カード全体のクリックによるルーター遷移（詳細画面）は維持したまま、タイトル/URL のリンク部分は `@click.stop` で伝播を止める
+
+変更箇所イメージ：
+
+```vue
+<a :href="bookmark.url" target="_blank" rel="noopener noreferrer" @click.stop>
+  <p class="card-title">{{ bookmark.title ?? bookmark.url }}</p>
+  <p class="card-url">{{ bookmark.url }}</p>
+</a>
+```
+
+---
+
+### Step 20: ブックマーク詳細画面のURL表示
+
+**`apps/frontend/src/views/BookmarkDetailView.vue`** のテンプレートにURL表示を追加：
+
+```vue
+<a :href="bookmark.url" target="_blank" rel="noopener noreferrer" class="detail-url">
+  {{ bookmark.url }}
+</a>
+```
+
+ドメインを別途 `computed` で取得している箇所の近くに配置し、フルURLを視認できるようにする。
+
+---
+
+## Phase 4（記事要約 & 自動既読）
+
+### 概要
+
+| 機能 | 内容 |
+|------|------|
+| 記事要約 | URLをスクレイピングして本文を取得し、Claude APIで要約して詳細画面に表示 |
+| 自動既読 | 一覧・詳細画面でURLを新規タブ表示したタイミングでステータスを `read` に変更 |
+
+---
+
+### Step 21: バックエンド 記事要約API
+
+**`apps/backend/src/routes/summarize.ts`** を新規作成し、`app.ts` にマウント。
+
+| メソッド | パス | 概要 |
+|---------|------|------|
+| POST | `/api/bookmarks/:id/summarize` | 該当ブックマークのURLをスクレイピングして要約を返す |
+
+処理フロー：
+
+1. DBからブックマークのURLを取得
+2. `node-fetch` でHTMLを取得（タイムアウト10秒）
+3. HTMLから本文を抽出（`<article>`・`<main>`・`<p>` タグを優先して文字列化）
+4. `@anthropic-ai/sdk` の `messages.create()` に本文を渡し、日本語で要約させる
+5. 要約テキストをレスポンスとして返す（DBには保存しない）
+
+プロンプト方針：
+
+```
+以下の記事本文を日本語で3〜5文に要約してください。要約のみ出力し、前置き・後書きは不要です。
+---
+{本文}
+```
+
+エラー処理：
+- スクレイピング失敗・タイムアウト → 422 でエラーメッセージを返す
+- Claude API エラー → 502 で返す
+
+---
+
+### Step 22: フロントエンド 記事要約の表示
+
+**`apps/frontend/src/api/bookmarks.ts`** に `summarizeBookmark(id)` を追加：
+
+```ts
+export async function summarizeBookmark(id: string): Promise<string> {
+  const res = await fetch(`/api/bookmarks/${id}/summarize`, { method: 'POST', headers: authHeaders() });
+  const data = await res.json();
+  return data.summary as string;
+}
+```
+
+**`apps/frontend/src/views/BookmarkDetailView.vue`** に要約セクションを追加：
+
+- 「要約を生成」ボタンを表示
+- クリック時に `summarizeBookmark()` を呼び出し、ローディング中はスピナーを表示
+- 結果を `summary` ref に格納してテキストエリアまたは `<p>` で表示
+- エラー時はエラーメッセージを表示
+
+---
+
+### Step 23: URL開封時の自動既読
+
+URLを新規タブで開く `<a>` タグのクリックイベントで `updateBookmark(id, { status: 'read' })` を呼ぶ。
+
+**`apps/frontend/src/components/BookmarkCard.vue`**：
+
+```ts
+async function openUrl(e: MouseEvent) {
+  // デフォルトの新規タブ動作は維持（preventDefault しない）
+  if (props.bookmark.status === 'unread') {
+    await updateBookmark(props.bookmark.id, { status: 'read' });
+    emit('statusChanged', props.bookmark.id, 'read');
+  }
+}
+```
+
+**`apps/frontend/src/views/BookmarkDetailView.vue`**：
+
+- 詳細画面のURLリンクにも同様の `@click` ハンドラを追加
+- 既読に変更後はローカルの `bookmark.value.status` も更新してUIを即時反映
+
+---
+
+### 追加パッケージ（Phase 4）
+
+| パッケージ | 対象 | 用途 |
+|-----------|------|------|
+| （追加なし） | — | `@anthropic-ai/sdk`・`node-fetch` は Phase 2 で導入済み |
+
+---
+
+### 変更ファイル一覧（Phase 3.5 〜 4）
+
+```
+apps/
+├── backend/
+│   └── src/
+│       └── routes/
+│           └── summarize.ts          # 新規: 記事要約API (Phase 4)
+└── frontend/
+    └── src/
+        ├── App.vue                   # noLayout メタ対応 (Phase 3.5)
+        ├── router/index.ts           # /login・/register に noLayout 追加 (Phase 3.5)
+        ├── api/
+        │   └── bookmarks.ts          # summarizeBookmark 追加 (Phase 4)
+        ├── components/
+        │   └── BookmarkCard.vue      # URL表示・リンク化・自動既読 (Phase 3.5, 4)
+        └── views/
+            └── BookmarkDetailView.vue # URL表示・要約セクション・自動既読 (Phase 3.5, 4)
+```
