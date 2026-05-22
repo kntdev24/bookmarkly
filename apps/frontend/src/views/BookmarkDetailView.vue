@@ -20,11 +20,6 @@ const editTitle = ref('');
 const editMemo = ref('');
 const editTagsText = ref('');
 
-const domain = computed(() => {
-  if (!bookmark.value?.url) return null;
-  try { return new URL(bookmark.value.url).hostname; } catch { return null; }
-});
-
 async function load() {
   try {
     const b = await getBookmark(id);
