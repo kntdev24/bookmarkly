@@ -14,7 +14,7 @@ const router = createRouter({
     { path: '/register', component: RegisterView, meta: { public: true } },
     { path: '/', component: DashboardView },
     { path: '/bookmarks', component: BookmarkListView },
-    { path: '/bookmarks/entry', component: BookmarkEntryView },
+    { path: '/bookmarks/entry', component: BookmarkEntryView, meta: { hideAddButton: true } },
     { path: '/bookmarks/:id', component: BookmarkDetailView },
   ],
 });

@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import AppSidebar from './components/AppSidebar.vue';
 import { useSidebar } from './composables/useSidebar.js';
 
 const router = useRouter();
+const route = useRoute();
 const { open } = useSidebar();
+
+const hideAddButton = computed(() => !!route.meta.hideAddButton);
 
 function goToEntry() {
   router.push('/bookmarks/entry');
@@ -21,9 +25,10 @@ function goToEntry() {
           <span class="material-symbols-outlined">menu</span>
         </button>
         <span class="topbar-logo-text">bookmarkly</span>
-        <button class="icon-btn" @click="goToEntry">
+        <button v-if="!hideAddButton" class="icon-btn" @click="goToEntry">
           <span class="material-symbols-outlined">add</span>
         </button>
+        <div v-else style="width: 40px" />
       </header>
       <RouterView />
     </main>
