@@ -50,6 +50,10 @@ button { cursor: pointer; font-family: inherit; }
   min-height: 100vh;
 }
 
+.app-auth .main {
+  margin-left: 0;
+}
+
 /* ===== SIDEBAR ===== */
 .sidebar {
   width: var(--sidebar-width);

@@ -8,6 +8,7 @@ const router = useRouter();
 const route = useRoute();
 const { open } = useSidebar();
 
+const noLayout = computed(() => !!route.meta.noLayout);
 const hideAddButton = computed(() => !!route.meta.hideAddButton);
 
 function goToEntry() {
@@ -16,11 +17,10 @@ function goToEntry() {
 </script>
 
 <template>
-  <div class="app-layout">
-    <AppSidebar />
+  <div :class="noLayout ? 'app-auth' : 'app-layout'">
+    <AppSidebar v-if="!noLayout" />
     <main class="main">
-      <!-- Mobile topbar (inside main so sticky works correctly) -->
-      <header class="topbar">
+      <header v-if="!noLayout" class="topbar">
         <button class="icon-btn" @click="open">
           <span class="material-symbols-outlined">menu</span>
         </button>

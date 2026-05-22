@@ -43,8 +43,21 @@ function onMarkRead(e: Event) {
         </span>
       </div>
       <div class="card-info">
-        <div class="card-title">{{ bookmark.title || bookmark.url || '(無題)' }}</div>
-        <div class="card-domain">{{ domain }}</div>
+        <a
+          v-if="bookmark.url"
+          :href="bookmark.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="card-title-link"
+          @click.stop
+        >
+          <div class="card-title">{{ bookmark.title || bookmark.url }}</div>
+          <div class="card-domain">{{ domain }}</div>
+        </a>
+        <template v-else>
+          <div class="card-title">{{ bookmark.title || '(無題)' }}</div>
+          <div class="card-domain">{{ domain }}</div>
+        </template>
         <div v-if="bookmark.memo" class="card-memo">{{ bookmark.memo }}</div>
         <div class="card-footer">
           <span v-for="tag in bookmark.tags" :key="tag" class="tag-pill">{{ tag }}</span>
@@ -67,3 +80,15 @@ function onMarkRead(e: Event) {
     </div>
   </div>
 </template>
+
+<style scoped>
+.card-title-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.card-title-link:hover .card-title {
+  text-decoration: underline;
+  color: var(--text-brand);
+}
+</style>

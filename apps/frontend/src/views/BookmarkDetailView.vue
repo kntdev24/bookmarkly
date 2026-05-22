@@ -118,7 +118,7 @@ onMounted(load);
           <div v-if="bookmark.url" class="detail-url">
             <span class="material-symbols-outlined">link</span>
             <a :href="bookmark.url" target="_blank" rel="noopener noreferrer">
-              {{ domain ?? bookmark.url }}
+              {{ bookmark.url }}
             </a>
           </div>
 
