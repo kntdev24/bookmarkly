@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useSidebar } from '../composables/useSidebar.js';
 import { currentUser, clearAuth } from '../stores/auth.js';
 
 const router = useRouter();
+const route = useRoute();
 const { isOpen, close } = useSidebar();
+
+const hideFab = computed(() => !!route.meta.hideAddButton);
 
 function goToEntry() {
   close();
@@ -56,7 +60,7 @@ function logout() {
   </aside>
 
   <!-- FAB (mobile) -->
-  <button class="fab" @click="goToEntry">
+  <button v-if="!hideFab" class="fab" @click="goToEntry">
     <span class="material-symbols-outlined">add</span>
   </button>
 </template>

@@ -20,11 +20,6 @@ const editTitle = ref('');
 const editMemo = ref('');
 const editTagsText = ref('');
 
-const domain = computed(() => {
-  if (!bookmark.value?.url) return null;
-  try { return new URL(bookmark.value.url).hostname; } catch { return null; }
-});
-
 async function load() {
   try {
     const b = await getBookmark(id);
@@ -118,7 +113,7 @@ onMounted(load);
           <div v-if="bookmark.url" class="detail-url">
             <span class="material-symbols-outlined">link</span>
             <a :href="bookmark.url" target="_blank" rel="noopener noreferrer">
-              {{ domain ?? bookmark.url }}
+              {{ bookmark.url }}
             </a>
           </div>
 

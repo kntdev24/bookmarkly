@@ -10,11 +10,11 @@ import { isAuthenticated } from '../stores/auth.js';
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/login', component: LoginView, meta: { public: true } },
-    { path: '/register', component: RegisterView, meta: { public: true } },
+    { path: '/login', component: LoginView, meta: { public: true, noLayout: true } },
+    { path: '/register', component: RegisterView, meta: { public: true, noLayout: true } },
     { path: '/', component: DashboardView },
     { path: '/bookmarks', component: BookmarkListView },
-    { path: '/bookmarks/entry', component: BookmarkEntryView },
+    { path: '/bookmarks/entry', component: BookmarkEntryView, meta: { hideAddButton: true } },
     { path: '/bookmarks/:id', component: BookmarkDetailView },
   ],
 });
